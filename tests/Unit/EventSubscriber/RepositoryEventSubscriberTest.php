@@ -6,7 +6,7 @@ namespace App\Tests\Unit\EventSubscriber;
 
 use App\Calculator\ClosestFiveMinutesCalculator;
 use App\Entity\Deployment;
-use App\Entity\Queue;
+use App\Entity\DeploymentQueue;
 use App\Entity\Repository;
 use App\Entity\Workspace;
 use App\Enum\DeploymentStatus;
@@ -19,6 +19,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 #[CoversClass(RepositoryEventSubscriber::class)]
@@ -46,6 +47,7 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             $this->createStub(ClosestFiveMinutesCalculator::class),
             $this->createStub(EntityManagerInterface::class),
             $this->createStub(EventDispatcherInterface::class),
+            $this->createStub(LoggerInterface::class),
         );
 
         $subscriber->handleUpdated($event);
@@ -70,6 +72,7 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             $this->createStub(ClosestFiveMinutesCalculator::class),
             $this->createStub(EntityManagerInterface::class),
             $this->createStub(EventDispatcherInterface::class),
+            $this->createStub(LoggerInterface::class),
         );
 
         $subscriber->handleUpdated($event);
@@ -91,10 +94,6 @@ class RepositoryEventSubscriberTest extends KernelTestCase
         $deployment->expects($this->once())
             ->method('getExpiryMinutes')
             ->willReturn(5);
-
-        $deployment->expects($this->once())
-            ->method('isActive')
-            ->willReturn(false);
 
         $resolver = $this->createMock(NextDeploymentResolver::class);
         $resolver->expects($this->once())
@@ -119,11 +118,19 @@ class RepositoryEventSubscriberTest extends KernelTestCase
 
         $deployment->expects($this->once())
             ->method('getQueue')
-            ->willReturn($queue = $this->createMock(Queue::class));
+            ->willReturn($queue = $this->createMock(DeploymentQueue::class));
+
+        $deployment->expects($this->once())
+            ->method('getStatus')
+            ->willReturn(DeploymentStatus::ACTIVE);
 
         $queue->expects($this->once())
             ->method('getWorkspace')
             ->willReturn($workspace = $this->createStub(Workspace::class));
+
+        $queue->expects($this->once())
+            ->method('shouldConfirmDeployments')
+            ->willReturn(false);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects($this->once())
@@ -144,6 +151,7 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             $calculator,
             $entityManager,
             $eventDispatcher,
+            $this->createStub(LoggerInterface::class),
         );
 
         $subscriber->handleUpdated($event);
@@ -161,6 +169,13 @@ class RepositoryEventSubscriberTest extends KernelTestCase
         $deployment->expects($this->once())
             ->method('getExpiryMinutes')
             ->willReturn(null);
+
+        $deployment->expects($this->once())
+            ->method('getQueue')
+            ->willReturn($queue = $this->createStub(DeploymentQueue::class));
+
+        $queue->method('shouldConfirmDeployments')
+            ->willReturn(false);
 
         $resolver = $this->createMock(NextDeploymentResolver::class);
         $resolver->expects($this->once())
@@ -183,10 +198,6 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             ->with(DeploymentStatus::ACTIVE)
             ->willReturnSelf();
 
-        $deployment->expects($this->once())
-            ->method('isActive')
-            ->willReturn(true);
-
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects($this->once())
             ->method('persist')
@@ -197,6 +208,7 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             $calculator,
             $entityManager,
             $this->createStub(EventDispatcherInterface::class),
+            $this->createStub(LoggerInterface::class),
         );
 
         $subscriber->handleUpdated($event);

@@ -40,7 +40,7 @@ readonly class AwaitingDeploymentMessageFactory
                     accessory: new ButtonBlockElement(
                         'Confirm',
                         'confirm-deployment-started',
-                        value: $deployment->getId(),
+                        value: (string) $deployment->getId(),
                         style: Style::PRIMARY,
                     )
                 ),
