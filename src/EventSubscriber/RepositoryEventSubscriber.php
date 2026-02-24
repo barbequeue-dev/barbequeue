@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\EventSubscriber;
 
 use App\Calculator\ClosestFiveMinutesCalculator;
+use App\Entity\DeploymentQueue;
 use App\Enum\DeploymentStatus;
+use App\Event\Deployment\DeploymentAwaitingDeploymentEvent;
 use App\Event\Deployment\DeploymentStartedEvent;
 use App\Event\Repository\RepositoryUpdatedEvent;
 use App\Resolver\Repository\NextDeploymentResolver;
 use Carbon\CarbonImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 readonly class RepositoryEventSubscriber implements EventSubscriberInterface
@@ -21,6 +24,7 @@ readonly class RepositoryEventSubscriber implements EventSubscriberInterface
         private ClosestFiveMinutesCalculator $closestFiveMinutesCalculator,
         private EntityManagerInterface $entityManager,
         private EventDispatcherInterface $eventDispatcher,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -51,14 +55,29 @@ readonly class RepositoryEventSubscriber implements EventSubscriberInterface
             );
         }
 
-        $workspace = $nextDeployment->getQueue()?->getWorkspace();
+        /** @var DeploymentQueue $queue */
+        $queue = $nextDeployment->getQueue();
 
-        if (!$nextDeployment->isActive() && $event->areNotificationsEnabled() && null !== $workspace) {
-            $this->eventDispatcher->dispatch(new DeploymentStartedEvent($nextDeployment, $workspace, true));
-        }
-
-        $nextDeployment->setStatus(DeploymentStatus::ACTIVE);
+        $nextDeployment->setStatus(
+            $queue->shouldConfirmDeployments() ? DeploymentStatus::AWAITING_DEPLOYMENT : DeploymentStatus::ACTIVE
+        );
 
         $this->entityManager->persist($nextDeployment);
+
+        $workspace = $queue->getWorkspace();
+
+        if (!$event->areNotificationsEnabled()) {
+            return;
+        }
+
+        if (null === $workspace) {
+            return;
+        }
+
+        match ($nextDeployment->getStatus()) {
+            DeploymentStatus::ACTIVE => $this->eventDispatcher->dispatch(new DeploymentStartedEvent($nextDeployment, $workspace, true)),
+            DeploymentStatus::AWAITING_DEPLOYMENT => $this->eventDispatcher->dispatch(new DeploymentAwaitingDeploymentEvent($nextDeployment, $workspace, true)),
+            default => $this->logger->warning('{deployment} is in invalid status', ['deployment' => $nextDeployment->getId()]),
+        };
     }
 }

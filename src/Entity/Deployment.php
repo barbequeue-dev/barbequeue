@@ -6,6 +6,7 @@ namespace App\Entity;
 
 use App\Enum\DeploymentStatus;
 use App\Enum\QueueBehaviour;
+use Carbon\CarbonImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -46,6 +47,15 @@ class Deployment extends QueuedUser
     #[Column(type: Types::ENUM, nullable: false, enumType: DeploymentStatus::class)]
     #[Groups(['queue', 'repository', 'queued-user'])]
     private DeploymentStatus $status = DeploymentStatus::PENDING;
+
+    #[Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?CarbonImmutable $startedAt = null;
+
+    #[Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?CarbonImmutable $completedAt = null;
+
+    #[Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?CarbonImmutable $confirmedAt = null;
 
     public function __construct()
     {
@@ -132,6 +142,11 @@ class Deployment extends QueuedUser
     public function isActive(): bool
     {
         return DeploymentStatus::ACTIVE === $this->status;
+    }
+
+    public function isAwaitingDeployment(): bool
+    {
+        return DeploymentStatus::AWAITING_DEPLOYMENT === $this->status;
     }
 
     public function isBlockedByQueue(): bool
@@ -226,5 +241,41 @@ class Deployment extends QueuedUser
             3 => 'rd',
             default => 'th',
         };
+    }
+
+    public function getStartedAt(): ?CarbonImmutable
+    {
+        return $this->startedAt;
+    }
+
+    public function setStartedAt(?CarbonImmutable $startedAt): static
+    {
+        $this->startedAt = $startedAt;
+
+        return $this;
+    }
+
+    public function getCompletedAt(): ?CarbonImmutable
+    {
+        return $this->completedAt;
+    }
+
+    public function setCompletedAt(?CarbonImmutable $completedAt): static
+    {
+        $this->completedAt = $completedAt;
+
+        return $this;
+    }
+
+    public function getConfirmedAt(): ?CarbonImmutable
+    {
+        return $this->confirmedAt;
+    }
+
+    public function setConfirmedAt(?CarbonImmutable $confirmedAt): static
+    {
+        $this->confirmedAt = $confirmedAt;
+
+        return $this;
     }
 }

@@ -45,6 +45,9 @@ class DeploymentQueue extends Queue
      */
     private Collection $queuedUsers;
 
+    #[Column(type: Types::INTEGER, nullable: true)]
+    private ?int $confirmationTimeoutMinutes = null;
+
     public function __construct()
     {
         parent::__construct();
@@ -212,5 +215,22 @@ class DeploymentQueue extends Queue
         return array_filter($deployments, function (Deployment $deployment) {
             return DeploymentStatus::PENDING === $deployment->getStatus();
         });
+    }
+
+    public function shouldConfirmDeployments(): bool
+    {
+        return null !== $this->confirmationTimeoutMinutes;
+    }
+
+    public function getConfirmationTimeoutMinutes(): ?int
+    {
+        return $this->confirmationTimeoutMinutes;
+    }
+
+    public function setConfirmationTimeoutMinutes(?int $confirmationTimeoutMinutes): static
+    {
+        $this->confirmationTimeoutMinutes = $confirmationTimeoutMinutes;
+
+        return $this;
     }
 }
