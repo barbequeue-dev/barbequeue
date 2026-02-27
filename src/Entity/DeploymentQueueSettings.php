@@ -35,7 +35,10 @@ class DeploymentQueueSettings
 
     public function setDeploymentQueue(?DeploymentQueue $deploymentQueue): static
     {
-        $this->deploymentQueue = $deploymentQueue;
+        if ($this->deploymentQueue !== $deploymentQueue) {
+            $this->deploymentQueue = $deploymentQueue;
+            $deploymentQueue?->setSettings($this);
+        }
 
         return $this;
     }

@@ -94,7 +94,12 @@ class Deployment extends QueuedUser
     /** @return Collection<int, User> */
     public function getNotifyUsers(): Collection
     {
-        return $this->users->map(fn (DeploymentUser $deploymentUser) => $deploymentUser->getUser());
+        return $this->users->map(function (DeploymentUser $deploymentUser) {
+            /** @var User $user */
+            $user = $deploymentUser->getUser();
+
+            return $user;
+        });
     }
 
     public function addUser(DeploymentUser $user): static
@@ -124,22 +129,22 @@ class Deployment extends QueuedUser
 
     public function isDraft(): bool
     {
-        return $this->joinedAt === null;
+        return null === $this->joinedAt;
     }
 
     public function isPending(): bool
     {
-        return $this->joinedAt !== null && $this->startedAt === null;
+        return null !== $this->joinedAt && null === $this->startedAt;
     }
 
     public function isActive(): bool
     {
-        return $this->startedAt !== null && $this->completedAt === null;
+        return null !== $this->startedAt && null === $this->completedAt;
     }
 
     public function isCompleted(): bool
     {
-        return $this->completedAt !== null;
+        return null !== $this->completedAt;
     }
 
     public function isBlockedByQueue(): bool
@@ -248,6 +253,18 @@ class Deployment extends QueuedUser
         return $this;
     }
 
+    public function getJoinedAt(): ?CarbonImmutable
+    {
+        return $this->joinedAt;
+    }
+
+    public function setJoinedAt(?CarbonImmutable $joinedAt): static
+    {
+        $this->joinedAt = $joinedAt;
+
+        return $this;
+    }
+
     public function getCompletedAt(): ?CarbonImmutable
     {
         return $this->completedAt;
@@ -256,18 +273,6 @@ class Deployment extends QueuedUser
     public function setCompletedAt(?CarbonImmutable $completedAt): static
     {
         $this->completedAt = $completedAt;
-
-        return $this;
-    }
-
-    public function getConfirmedAt(): ?CarbonImmutable
-    {
-        return $this->confirmedAt;
-    }
-
-    public function setConfirmedAt(?CarbonImmutable $confirmedAt): static
-    {
-        $this->confirmedAt = $confirmedAt;
 
         return $this;
     }

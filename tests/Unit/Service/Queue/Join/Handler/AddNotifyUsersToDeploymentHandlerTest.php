@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service\Queue\Join\Handler;
 
 use App\Entity\Deployment;
+use App\Entity\DeploymentUser;
 use App\Entity\Queue;
 use App\Entity\QueuedUser;
 use App\Entity\User;
+use App\Enum\DeploymentUser as DeploymentUserType;
+use App\Factory\DeploymentUserFactory;
 use App\Service\Queue\Context\ContextType;
 use App\Service\Queue\Context\QueueContextInterface;
 use App\Service\Queue\Join\Handler\AddNotifyUsersToDeploymentHandler;
@@ -38,7 +41,10 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
             ->method('getNotifyUsers')
             ->willReturn($collection);
 
-        $handler = new AddNotifyUsersToDeploymentHandler($this->getLogger());
+        $handler = new AddNotifyUsersToDeploymentHandler(
+            $this->getLogger(),
+            $this->createStub(DeploymentUserFactory::class),
+        );
 
         $this->assertTrue($handler->supports($context));
     }
@@ -60,7 +66,10 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
             ->method('getNotifyUsers')
             ->willReturn($collection);
 
-        $handler = new AddNotifyUsersToDeploymentHandler($this->getLogger());
+        $handler = new AddNotifyUsersToDeploymentHandler(
+            $this->getLogger(),
+            $this->createStub(DeploymentUserFactory::class),
+        );
 
         $this->assertFalse($handler->supports($context));
     }
@@ -77,7 +86,10 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
             ->method('getNotifyUsers')
             ->withAnyParameters();
 
-        $handler = new AddNotifyUsersToDeploymentHandler($this->getLogger());
+        $handler = new AddNotifyUsersToDeploymentHandler(
+            $this->getLogger(),
+            $this->createStub(DeploymentUserFactory::class),
+        );
 
         $this->assertFalse($handler->supports($context));
     }
@@ -87,7 +99,10 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
     {
         $context = $this->createStub(QueueContextInterface::class);
 
-        $handler = new AddNotifyUsersToDeploymentHandler($this->getLogger());
+        $handler = new AddNotifyUsersToDeploymentHandler(
+            $this->getLogger(),
+            $this->createStub(DeploymentUserFactory::class),
+        );
 
         $this->assertFalse($handler->supports($context));
     }
@@ -97,7 +112,10 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
     {
         $this->expectNotToPerformAssertions();
 
-        $handler = new AddNotifyUsersToDeploymentHandler($this->getLogger());
+        $handler = new AddNotifyUsersToDeploymentHandler(
+            $this->getLogger(),
+            $this->createStub(DeploymentUserFactory::class),
+        );
 
         $handler->handle($this->createStub(QueueContextInterface::class));
     }
@@ -128,9 +146,16 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
             ->willReturN(new ArrayCollection([$user = $this->createStub(User::class)]));
 
         $deployment = $this->createMock(Deployment::class);
+
+        $deploymentUserFactory = $this->createMock(DeploymentUserFactory::class);
+        $deploymentUserFactory->expects($this->once())
+            ->method('create')
+            ->with($user, $deployment, DeploymentUserType::NOTIFY)
+            ->willReturn($deploymentUser = $this->createStub(DeploymentUser::class));
+
         $deployment->expects($this->once())
             ->method('addUser')
-            ->with($user)
+            ->with($deploymentUser)
             ->willReturnSelf();
 
         $context->expects($this->once())
@@ -143,7 +168,7 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
             'contextType' => $contextType->value,
         ]);
 
-        $handler = new AddNotifyUsersToDeploymentHandler($this->getLogger());
+        $handler = new AddNotifyUsersToDeploymentHandler($this->getLogger(), $deploymentUserFactory);
 
         $handler->handle($context);
     }

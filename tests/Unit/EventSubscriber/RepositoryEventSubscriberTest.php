@@ -7,6 +7,7 @@ namespace App\Tests\Unit\EventSubscriber;
 use App\Calculator\ClosestFiveMinutesCalculator;
 use App\Entity\Deployment;
 use App\Entity\DeploymentQueue;
+use App\Entity\DeploymentQueueSettings;
 use App\Entity\Repository;
 use App\Entity\Workspace;
 use App\Event\Deployment\DeploymentStartedEvent;
@@ -80,6 +81,8 @@ class RepositoryEventSubscriberTest extends KernelTestCase
     #[Test]
     public function itShouldSetExpiresAtIfExpiryMinutesSetOnDeployment(): void
     {
+        CarbonImmutable::setTestNow(CarbonImmutable::now());
+
         $event = $this->createMock(RepositoryUpdatedEvent::class);
         $event->expects($this->once())
             ->method('getRepository')
@@ -119,8 +122,20 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             ->willReturn($workspace = $this->createStub(Workspace::class));
 
         $queue->expects($this->once())
-            ->method('shouldConfirmDeploymentStarted')
-            ->willReturn(false);
+            ->method('getSettings')
+            ->willReturn($settings = $this->createStub(DeploymentQueueSettings::class));
+
+        $settings->method('getStartConfirmationTimeoutMinutes')
+            ->willReturn(null);
+
+        $deployment->expects($this->once())
+            ->method('setStartedAt')
+            ->with(CarbonImmutable::now())
+            ->willReturnSelf();
+
+        $deployment->expects($this->once())
+            ->method('isActive')
+            ->willReturn(true);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects($this->once())
@@ -150,6 +165,8 @@ class RepositoryEventSubscriberTest extends KernelTestCase
     #[Test]
     public function itShouldNotSetExpiresAtIfExpiryMinutesNotSetOnDeployment(): void
     {
+        CarbonImmutable::setTestNow(CarbonImmutable::now());
+
         $event = $this->createMock(RepositoryUpdatedEvent::class);
         $event->expects($this->once())
             ->method('getRepository')
@@ -164,8 +181,16 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             ->method('getQueue')
             ->willReturn($queue = $this->createStub(DeploymentQueue::class));
 
-        $queue->method('shouldConfirmDeploymentStarted')
-            ->willReturn(false);
+        $queue->method('getSettings')
+            ->willReturn($settings = $this->createStub(DeploymentQueueSettings::class));
+
+        $settings->method('getStartConfirmationTimeoutMinutes')
+            ->wilLReturn(null);
+
+        $deployment->expects($this->once())
+            ->method('setStartedAt')
+            ->with(CarbonImmutable::now())
+            ->willReturnSelf();
 
         $resolver = $this->createMock(NextDeploymentResolver::class);
         $resolver->expects($this->once())

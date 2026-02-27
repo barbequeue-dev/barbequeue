@@ -29,8 +29,8 @@ class DeploymentUserFactory
             ->setDeployment($deployment)
             ->setType($type);
 
-        if ($type === DeploymentUserType::CONFIRM) {
-
+        if (DeploymentUserType::CONFIRM === $type) {
+            $this->createConfirmations($deployment, $user);
         }
 
         return $user;
@@ -44,15 +44,15 @@ class DeploymentUserFactory
         /** @var DeploymentQueueSettings $settings */
         $settings = $queue->getSettings();
 
-        if ($settings->getJoinConfirmationTimeoutMinutes() !== null) {
+        if (null !== $settings->getJoinConfirmationTimeoutMinutes()) {
             $this->deploymentConfirmationFactory->create($deploymentUser, DeploymentConfirmation::JOIN);
         }
 
-        if ($settings->getStartConfirmationTimeoutMinutes() !== null) {
+        if (null !== $settings->getStartConfirmationTimeoutMinutes()) {
             $this->deploymentConfirmationFactory->create($deploymentUser, DeploymentConfirmation::START);
         }
 
-        if ($settings->getCompletionConfirmationTimeoutMinutes() !== null) {
+        if (null !== $settings->getCompletionConfirmationTimeoutMinutes()) {
             $this->deploymentConfirmationFactory->create($deploymentUser, DeploymentConfirmation::COMPLETION);
         }
     }

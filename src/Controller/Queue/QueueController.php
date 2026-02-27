@@ -6,6 +6,7 @@ namespace App\Controller\Queue;
 
 use App\Controller\AbstractController;
 use App\Entity\DeploymentQueue;
+use App\Entity\DeploymentQueueSettings;
 use App\Entity\Queue;
 use App\Enum\Queue as QueueEnum;
 use App\Form\Queue\QueueType;
@@ -135,7 +136,7 @@ class QueueController extends AbstractController
         $type = QueueEnum::tryFrom($request->request->getString('type'));
 
         $queue = match ($type) {
-            QueueEnum::DEPLOYMENT => new DeploymentQueue(),
+            QueueEnum::DEPLOYMENT => new DeploymentQueue()->setSettings(new DeploymentQueueSettings()),
             default => new Queue(),
         };
 

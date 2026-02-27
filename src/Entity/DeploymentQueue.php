@@ -45,7 +45,7 @@ class DeploymentQueue extends Queue
      */
     private Collection $queuedUsers;
 
-    #[OneToOne(targetEntity: DeploymentQueueSettings::class, mappedBy: 'deploymentQueue')]
+    #[OneToOne(targetEntity: DeploymentQueueSettings::class, mappedBy: 'deploymentQueue', cascade: ['persist'])]
     private ?DeploymentQueueSettings $settings = null;
 
     public function __construct()
@@ -221,5 +221,15 @@ class DeploymentQueue extends Queue
     public function getSettings(): ?DeploymentQueueSettings
     {
         return $this->settings;
+    }
+
+    public function setSettings(?DeploymentQueueSettings $settings): static
+    {
+        if ($this->settings !== $settings) {
+            $this->settings = $settings;
+            $settings?->setDeploymentQueue($this);
+        }
+
+        return $this;
     }
 }

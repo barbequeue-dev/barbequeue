@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\DeploymentUser as DeploymentUserType;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\Column;
@@ -34,8 +35,14 @@ class DeploymentUser
     #[Column(type: Types::ENUM, enumType: DeploymentUserType::class)]
     private ?DeploymentUserType $type = null;
 
+    /** @var Collection<int, DeploymentConfirmation> $confirmations */
     #[OneToMany(targetEntity: DeploymentConfirmation::class, mappedBy: 'deploymentUser', cascade: ['persist'])]
     private Collection $confirmations;
+
+    public function __construct()
+    {
+        $this->confirmations = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -50,6 +57,7 @@ class DeploymentUser
     public function setDeployment(?Deployment $deployment): DeploymentUser
     {
         $this->deployment = $deployment;
+
         return $this;
     }
 
@@ -77,6 +85,7 @@ class DeploymentUser
         return $this;
     }
 
+    /** @return Collection<int, DeploymentConfirmation> */
     public function getConfirmations(): Collection
     {
         return $this->confirmations;
@@ -91,5 +100,4 @@ class DeploymentUser
 
         return $this;
     }
-
 }

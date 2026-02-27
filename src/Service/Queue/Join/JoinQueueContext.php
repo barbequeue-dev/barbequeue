@@ -23,16 +23,16 @@ class JoinQueueContext extends QueueContext implements QueueContextInterface
     private Collection $notifyUsers;
 
     public function __construct(
-        string                   $queueName,
-        string                   $teamId,
-        string                   $userId,
-        private readonly string  $userName,
-        private readonly ?int    $requiredMinutes = null,
+        string $queueName,
+        string $teamId,
+        string $userId,
+        private readonly string $userName,
+        private readonly ?int $requiredMinutes = null,
         private readonly ?string $deploymentDescription = null,
-        private ?string          $deploymentLink = null,
-        private readonly ?int    $deploymentRepositoryId = null,
+        private ?string $deploymentLink = null,
+        private readonly ?int $deploymentRepositoryId = null,
         /** @var string[] $notifyUserIds */
-        private readonly array   $notifyUserIds = [],
+        private readonly array $notifyUserIds = [],
     ) {
         parent::__construct($queueName, $teamId, $userId);
 

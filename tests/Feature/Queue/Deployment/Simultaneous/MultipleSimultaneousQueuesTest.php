@@ -133,7 +133,7 @@ class MultipleSimultaneousQueuesTest extends FeatureTestCase
                 $secondRepository,
                 $secondDescription,
                 $secondLink,
-                draft: true,
+                pending: true,
                 expiryMinutes: $expiry,
             )
 

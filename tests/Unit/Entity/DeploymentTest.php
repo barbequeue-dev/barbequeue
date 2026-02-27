@@ -31,18 +31,44 @@ class DeploymentTest extends KernelTestCase
         $this->assertSame($description, $deployment->getDescription());
 
         $notifyUser = $this->createStub(DeploymentUser::class);
+        $notifyUser->method('getUser')
+            ->willReturn($user = $this->createStub(User::class));
 
         $deployment->addUser($notifyUser);
 
         $this->assertCount(1, $deployment->getNotifyUsers());
-        $this->assertEquals($notifyUser, $deployment->getNotifyUsers()->first());
+        $this->assertEquals($user, $deployment->getNotifyUsers()->first());
 
         $deployment->removeUser($notifyUser);
 
         $this->assertCount(0, $deployment->getNotifyUsers());
         $this->assertFalse($deployment->getNotifyUsers()->first());
 
+        $this->assertTrue($deployment->isDraft());
+        $this->assertFalse($deployment->isPending());
+        $this->assertFalse($deployment->isActive());
+        $this->assertFalse($deployment->isCompleted());
+
+        $deployment->setJoinedAt(CarbonImmutable::now());
+
+        $this->assertFalse($deployment->isDraft());
+        $this->assertTrue($deployment->isPending());
+        $this->assertFalse($deployment->isActive());
+        $this->assertFalse($deployment->isCompleted());
+
+        $deployment->setStartedAt(CarbonImmutable::now());
+
+        $this->assertFalse($deployment->isDraft());
+        $this->assertFalse($deployment->isPending());
         $this->assertTrue($deployment->isActive());
+        $this->assertFalse($deployment->isCompleted());
+
+        $deployment->setCompletedAt(CarbonImmutable::now());
+
+        $this->assertFalse($deployment->isDraft());
+        $this->assertFalse($deployment->isPending());
+        $this->assertFalse($deployment->isActive());
+        $this->assertTrue($deployment->isCompleted());
     }
 
     #[Test]
