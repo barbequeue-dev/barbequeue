@@ -31,7 +31,7 @@ class JoinQueueContextFactory
             $context->setRepository($repository);
 
             foreach ($notifyUsers as $notifyUser) {
-                $context->addUser($notifyUser);
+                $context->addNotifyUser($notifyUser);
             }
         }
 

@@ -35,7 +35,7 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
             ->willReturn($this->createStub(Deployment::class));
 
         $context->expects($this->once())
-            ->method('getUsers')
+            ->method('getNotifyUsers')
             ->willReturn($collection);
 
         $handler = new AddNotifyUsersToDeploymentHandler($this->getLogger());
@@ -57,7 +57,7 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
             ->willReturn($this->createStub(Deployment::class));
 
         $context->expects($this->once())
-            ->method('getUsers')
+            ->method('getNotifyUsers')
             ->willReturn($collection);
 
         $handler = new AddNotifyUsersToDeploymentHandler($this->getLogger());
@@ -74,7 +74,7 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
             ->willReturn($this->createStub(QueuedUser::class));
 
         $context->expects($this->never())
-            ->method('getUsers')
+            ->method('getNotifyUsers')
             ->withAnyParameters();
 
         $handler = new AddNotifyUsersToDeploymentHandler($this->getLogger());
@@ -124,7 +124,7 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
             ->willReturn($contextType = ContextType::JOIN);
 
         $context->expects($this->once())
-            ->method('getUsers')
+            ->method('getNotifyUsers')
             ->willReturN(new ArrayCollection([$user = $this->createStub(User::class)]));
 
         $deployment = $this->createMock(Deployment::class);

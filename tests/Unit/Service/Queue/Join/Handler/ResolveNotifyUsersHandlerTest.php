@@ -26,11 +26,11 @@ class ResolveNotifyUsersHandlerTest extends LoggerAwareTestCase
     {
         $context = $this->createMock(JoinQueueContext::class);
         $context->expects($this->once())
-            ->method('getNotifyUsers')
+            ->method('getNotifyUserIds')
             ->willReturn(['notifyUser']);
 
         $context->expects($this->once())
-            ->method('getUsers')
+            ->method('getNotifyUsers')
             ->willReturn($collection = $this->createMock(Collection::class));
 
         $collection->expects($this->once())
@@ -54,11 +54,11 @@ class ResolveNotifyUsersHandlerTest extends LoggerAwareTestCase
     {
         $context = $this->createMock(JoinQueueContext::class);
         $context->expects($this->once())
-            ->method('getNotifyUsers')
+            ->method('getNotifyUserIds')
             ->willReturn(['notifyUser']);
 
         $context->expects($this->once())
-            ->method('getUsers')
+            ->method('getNotifyUsers')
             ->willReturn($collection = $this->createMock(Collection::class));
 
         $collection->expects($this->once())
@@ -82,7 +82,7 @@ class ResolveNotifyUsersHandlerTest extends LoggerAwareTestCase
     {
         $context = $this->createMock(JoinQueueContext::class);
         $context->expects($this->once())
-            ->method('getNotifyUsers')
+            ->method('getNotifyUserIds')
             ->willReturn(['notifyUser']);
 
         $context->expects($this->once())
@@ -102,7 +102,7 @@ class ResolveNotifyUsersHandlerTest extends LoggerAwareTestCase
     {
         $context = $this->createMock(JoinQueueContext::class);
         $context->expects($this->once())
-            ->method('getNotifyUsers')
+            ->method('getNotifyUserIds')
             ->willReturn([]);
 
         $context->expects($this->never())
@@ -169,7 +169,7 @@ class ResolveNotifyUsersHandlerTest extends LoggerAwareTestCase
             ->willReturn($workspace = $this->createStub(Workspace::class));
 
         $context->expects($this->once())
-            ->method('getNotifyUsers')
+            ->method('getNotifyUserIds')
             ->willReturn([$firstUserId = 'firstUserId', $secondUserId = 'secondUserId']);
 
         $firstUser = $this->createStub(User::class);
@@ -195,7 +195,7 @@ class ResolveNotifyUsersHandlerTest extends LoggerAwareTestCase
 
         $addUserCallCount = 0;
         $context->expects($this->exactly(2))
-            ->method('addUser')
+            ->method('addNotifyUser')
             ->willReturnCallback(function ($user) use ($firstUser, $secondUser, &$addUserCallCount) {
                 if (1 === ++$addUserCallCount) {
                     $this->assertSame($firstUser, $user);

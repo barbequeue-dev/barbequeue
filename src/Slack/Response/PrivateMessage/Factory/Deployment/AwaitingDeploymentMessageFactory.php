@@ -34,7 +34,7 @@ readonly class AwaitingDeploymentMessageFactory
                 new SectionBlock(
                     sprintf(
                         'You have %d minutes to confirm the deployment has started. This can be done by typing `/bbq start %s` or by clicking on the confirmation button below.',
-                        $queue->getStartConfirmationTimeoutMinutes(),
+                        $queue->getSettings()?->getStartConfirmationTimeoutMinutes(),
                         $queue->getName(),
                     ),
                     accessory: new ButtonBlockElement(

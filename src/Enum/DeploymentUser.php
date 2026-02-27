@@ -8,5 +8,4 @@ enum DeploymentUser: string
 {
     case NOTIFY = 'notify';
     case CONFIRM = 'confirm';
-    case QA = 'qa';
 }

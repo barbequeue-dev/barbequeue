@@ -82,10 +82,14 @@ class DeploymentUser
         return $this->confirmations;
     }
 
-    public function setConfirmations(Collection $confirmations): static
+    public function addConfirmation(DeploymentConfirmation $confirmation): static
     {
-        $this->confirmations = $confirmations;
+        if (!$this->confirmations->contains($confirmation)) {
+            $this->confirmations->add($confirmation);
+            $confirmation->setDeploymentUser($this);
+        }
 
         return $this;
     }
+
 }

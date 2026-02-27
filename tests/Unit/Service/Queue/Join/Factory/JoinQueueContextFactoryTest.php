@@ -90,8 +90,8 @@ class JoinQueueContextFactoryTest extends KernelTestCase
         $this->assertSame($description, $result->getDeploymentDescription());
         $this->assertSame($link, $result->getDeploymentLink());
         $this->assertSame($repositoryId, $result->getDeploymentRepositoryId());
-        $this->assertEquals([$notifySlackId], $result->getNotifyUsers());
-        $this->assertTrue($result->getUsers()->contains($notifyUser));
+        $this->assertEquals([$notifySlackId], $result->getNotifyUserIds());
+        $this->assertTrue($result->getNotifyUsers()->contains($notifyUser));
         $this->assertSame($queue, $result->getQueue());
         $this->assertSame($workspace, $result->getWorkspace());
         $this->assertSame($repository, $result->getRepository());

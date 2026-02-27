@@ -26,7 +26,7 @@ class DeploymentQueueSettings
     private ?int $startConfirmationTimeoutMinutes = null;
 
     #[Column(type: Types::INTEGER, nullable: true)]
-    private ?int $completeConfirmationTimeoutMinutes = null;
+    private ?int $completionConfirmationTimeoutMinutes = null;
 
     public function getDeploymentQueue(): ?DeploymentQueue
     {
@@ -64,14 +64,14 @@ class DeploymentQueueSettings
         return $this;
     }
 
-    public function getCompleteConfirmationTimeoutMinutes(): ?int
+    public function getCompletionConfirmationTimeoutMinutes(): ?int
     {
-        return $this->completeConfirmationTimeoutMinutes;
+        return $this->completionConfirmationTimeoutMinutes;
     }
 
-    public function setCompleteConfirmationTimeoutMinutes(?int $completeConfirmationTimeoutMinutes): static
+    public function setCompletionConfirmationTimeoutMinutes(?int $completionConfirmationTimeoutMinutes): static
     {
-        $this->completeConfirmationTimeoutMinutes = $completeConfirmationTimeoutMinutes;
+        $this->completionConfirmationTimeoutMinutes = $completionConfirmationTimeoutMinutes;
 
         return $this;
     }

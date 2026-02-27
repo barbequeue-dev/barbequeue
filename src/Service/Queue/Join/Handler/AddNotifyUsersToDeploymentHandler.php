@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Service\Queue\Join\Handler;
 
 use App\Entity\Deployment;
+use App\Enum\DeploymentUser;
+use App\Factory\DeploymentUserFactory;
 use App\Service\Queue\Context\QueueContextInterface;
 use App\Service\Queue\Join\JoinQueueContext;
 use Psr\Log\LoggerInterface;
@@ -15,6 +17,7 @@ readonly class AddNotifyUsersToDeploymentHandler implements JoinQueueHandlerInte
 {
     public function __construct(
         private LoggerInterface $logger,
+        private DeploymentUserFactory $deploymentUserFactory,
     ) {
     }
 
@@ -22,7 +25,7 @@ readonly class AddNotifyUsersToDeploymentHandler implements JoinQueueHandlerInte
     {
         return $context instanceof JoinQueueContext
             && $context->getQueuedUser() instanceof Deployment
-            && !$context->getUsers()->isEmpty();
+            && !$context->getNotifyUsers()->isEmpty();
     }
 
     public function handle(QueueContextInterface $context): void
@@ -40,8 +43,10 @@ readonly class AddNotifyUsersToDeploymentHandler implements JoinQueueHandlerInte
         /** @var Deployment $deployment */
         $deployment = $context->getQueuedUser();
 
-        foreach ($context->getUsers() as $user) {
-            $deployment->addUser($user);
+        foreach ($context->getNotifyUsers() as $user) {
+            $deployment->addUser(
+                $this->deploymentUserFactory->create($user, $deployment, DeploymentUser::NOTIFY)
+            );
         }
     }
 }

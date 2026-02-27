@@ -10,12 +10,13 @@ use App\Enum\DeploymentConfirmation as ConfirmationType;
 
 class DeploymentConfirmationFactory
 {
-    public function create(
-        DeploymentUser $deploymentUser,
-        ConfirmationType $type,
-    ): DeploymentConfirmation {
-        return new DeploymentConfirmation()
-            ->setDeploymentUser($deploymentUser)
+    public function create(DeploymentUser $deploymentUser, ConfirmationType $type): DeploymentConfirmation
+    {
+        $confirmation = new DeploymentConfirmation()
             ->setType($type);
+
+        $deploymentUser->addConfirmation($confirmation);
+
+        return $confirmation;
     }
 }
