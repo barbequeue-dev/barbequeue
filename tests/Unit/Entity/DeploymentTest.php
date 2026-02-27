@@ -33,7 +33,7 @@ class DeploymentTest extends KernelTestCase
 
         $notifyUser = $this->createStub(User::class);
 
-        $deployment->addNotifyUser($notifyUser);
+        $deployment->addUser($notifyUser);
 
         $this->assertCount(1, $deployment->getNotifyUsers());
         $this->assertEquals($notifyUser, $deployment->getNotifyUsers()->first());

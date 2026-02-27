@@ -129,7 +129,7 @@ class AddNotifyUsersToDeploymentHandlerTest extends LoggerAwareTestCase
 
         $deployment = $this->createMock(Deployment::class);
         $deployment->expects($this->once())
-            ->method('addNotifyUser')
+            ->method('addUser')
             ->with($user)
             ->willReturnSelf();
 

@@ -16,6 +16,7 @@ use Doctrine\ORM\Mapping\HasLifecycleCallbacks;
 use Doctrine\ORM\Mapping\JoinTable;
 use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\OneToMany;
 use Nelmio\ApiDocBundle\Attribute\Model;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -39,10 +40,9 @@ class Deployment extends QueuedUser
     private ?string $description = null;
 
     /** @var Collection<int, User> $notifyUsers */
-    #[ManyToMany(targetEntity: User::class, cascade: ['persist'])]
-    #[JoinTable(name: 'deployment_notify_user')]
+    #[OneToMany(targetEntity: DeploymentUser::class, mappedBy: 'deployment', cascade: ['persist'])]
     #[Groups(['queued-user'])]
-    private Collection $notifyUsers;
+    private Collection $users;
 
     #[Column(type: Types::ENUM, nullable: false, enumType: DeploymentStatus::class)]
     #[Groups(['queue', 'repository', 'queued-user'])]
@@ -59,7 +59,7 @@ class Deployment extends QueuedUser
 
     public function __construct()
     {
-        $this->notifyUsers = new ArrayCollection();
+        $this->users = new ArrayCollection();
     }
 
     public function getRepository(): ?Repository
@@ -101,10 +101,10 @@ class Deployment extends QueuedUser
     /** @return Collection<int, User> */
     public function getNotifyUsers(): Collection
     {
-        return $this->notifyUsers;
+        return $this->users->map(fn (DeploymentUser $deploymentUser) => $deploymentUser->getUser());
     }
 
-    public function addNotifyUser(User $user): static
+    public function addUser(DeploymentUser $user): static
     {
         if (!$this->notifyUsers->contains($user)) {
             $this->notifyUsers->add($user);

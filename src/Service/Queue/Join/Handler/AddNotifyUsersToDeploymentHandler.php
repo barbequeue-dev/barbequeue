@@ -41,7 +41,7 @@ readonly class AddNotifyUsersToDeploymentHandler implements JoinQueueHandlerInte
         $deployment = $context->getQueuedUser();
 
         foreach ($context->getUsers() as $user) {
-            $deployment->addNotifyUser($user);
+            $deployment->addUser($user);
         }
     }
 }
