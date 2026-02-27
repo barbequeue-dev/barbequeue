@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Queue\Deployment\Simultaneous;
 
-use App\Enum\DeploymentStatus;
 use App\Enum\Queue;
 use App\Enum\QueueBehaviour;
 use App\Slack\BlockElement\BlockElement;
@@ -114,7 +113,7 @@ class MultipleSimultaneousQueuesTest extends FeatureTestCase
                 $firstRepository,
                 $firstDescription,
                 $firstLink,
-                DeploymentStatus::ACTIVE,
+                active: true,
                 expiryMinutes: $expiry,
                 hasExpiry: true,
             )
@@ -134,7 +133,7 @@ class MultipleSimultaneousQueuesTest extends FeatureTestCase
                 $secondRepository,
                 $secondDescription,
                 $secondLink,
-                DeploymentStatus::PENDING,
+                draft: true,
                 expiryMinutes: $expiry,
             )
 
@@ -147,7 +146,7 @@ class MultipleSimultaneousQueuesTest extends FeatureTestCase
                 $secondRepository,
                 $secondDescription,
                 $secondLink,
-                DeploymentStatus::ACTIVE,
+                active: true,
                 expiryMinutes: $expiry,
                 hasExpiry: true,
             )

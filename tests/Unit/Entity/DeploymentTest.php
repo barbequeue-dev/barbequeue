@@ -6,10 +6,11 @@ namespace App\Tests\Unit\Entity;
 
 use App\Entity\Deployment;
 use App\Entity\DeploymentQueue;
+use App\Entity\DeploymentUser;
 use App\Entity\Repository;
 use App\Entity\User;
-use App\Enum\DeploymentStatus;
 use App\Enum\QueueBehaviour;
+use Carbon\CarbonImmutable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -23,22 +24,20 @@ class DeploymentTest extends KernelTestCase
         $deployment = new Deployment()
             ->setRepository($repository = $this->createStub(Repository::class))
             ->setLink($link = 'link')
-            ->setDescription($description = 'description')
-            ->setStatus($status = DeploymentStatus::ACTIVE);
+            ->setDescription($description = 'description');
 
         $this->assertSame($repository, $deployment->getRepository());
         $this->assertSame($link, $deployment->getLink());
         $this->assertSame($description, $deployment->getDescription());
-        $this->assertSame($status, $deployment->getStatus());
 
-        $notifyUser = $this->createStub(User::class);
+        $notifyUser = $this->createStub(DeploymentUser::class);
 
         $deployment->addUser($notifyUser);
 
         $this->assertCount(1, $deployment->getNotifyUsers());
         $this->assertEquals($notifyUser, $deployment->getNotifyUsers()->first());
 
-        $deployment->removeNotifyUser($notifyUser);
+        $deployment->removeUser($notifyUser);
 
         $this->assertCount(0, $deployment->getNotifyUsers());
         $this->assertFalse($deployment->getNotifyUsers()->first());
@@ -236,7 +235,7 @@ class DeploymentTest extends KernelTestCase
     public function itShouldReturnNullOnGetBlockedIfDeploymentIsActive(): void
     {
         $deployment = new Deployment()
-            ->setStatus(DeploymentStatus::ACTIVE);
+            ->setStartedAt($this->createStub(CarbonImmutable::class));
 
         $this->assertNull($deployment->getBlocker());
     }

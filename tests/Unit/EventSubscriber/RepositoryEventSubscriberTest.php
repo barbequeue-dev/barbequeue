@@ -9,7 +9,6 @@ use App\Entity\Deployment;
 use App\Entity\DeploymentQueue;
 use App\Entity\Repository;
 use App\Entity\Workspace;
-use App\Enum\DeploymentStatus;
 use App\Event\Deployment\DeploymentStartedEvent;
 use App\Event\Repository\RepositoryUpdatedEvent;
 use App\EventSubscriber\RepositoryEventSubscriber;
@@ -112,24 +111,15 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             ->willReturnSelf();
 
         $deployment->expects($this->once())
-            ->method('setStatus')
-            ->with(DeploymentStatus::ACTIVE)
-            ->willReturnSelf();
-
-        $deployment->expects($this->once())
             ->method('getQueue')
             ->willReturn($queue = $this->createMock(DeploymentQueue::class));
-
-        $deployment->expects($this->once())
-            ->method('getStatus')
-            ->willReturn(DeploymentStatus::ACTIVE);
 
         $queue->expects($this->once())
             ->method('getWorkspace')
             ->willReturn($workspace = $this->createStub(Workspace::class));
 
         $queue->expects($this->once())
-            ->method('shouldConfirmDeployments')
+            ->method('shouldConfirmDeploymentStarted')
             ->willReturn(false);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
@@ -174,7 +164,7 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             ->method('getQueue')
             ->willReturn($queue = $this->createStub(DeploymentQueue::class));
 
-        $queue->method('shouldConfirmDeployments')
+        $queue->method('shouldConfirmDeploymentStarted')
             ->willReturn(false);
 
         $resolver = $this->createMock(NextDeploymentResolver::class);
@@ -191,11 +181,6 @@ class RepositoryEventSubscriberTest extends KernelTestCase
         $deployment->expects($this->never())
             ->method('setExpiresAt')
             ->with($expiresAt)
-            ->willReturnSelf();
-
-        $deployment->expects($this->once())
-            ->method('setStatus')
-            ->with(DeploymentStatus::ACTIVE)
             ->willReturnSelf();
 
         $entityManager = $this->createMock(EntityManagerInterface::class);

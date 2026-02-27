@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Queue\Deployment\Jump;
 
-use App\Enum\DeploymentStatus;
 use App\Enum\QueueBehaviour;
 use App\Slack\Command\SubCommand;
 use App\Slack\Interaction\Interaction;
@@ -25,19 +24,19 @@ class AllowJumpForExistingEntryIfUnblockedTest extends FeatureTestCase
             ->createDeploymentQueue($secondQueue = 'second-queue', [$firstRepository, $secondRepository], QueueBehaviour::ALLOW_JUMPS)
 
             ->joinDeploymentQueue($firstQueue, $firstRepository, $firstBlocker = 'first-blocker', $link = 'https://example.com')
-            ->assertDeploymentExists($firstQueue, $firstRepository, $firstBlocker, $link, DeploymentStatus::ACTIVE)
+            ->assertDeploymentExists($firstQueue, $firstRepository, $firstBlocker, $link, active: true)
             ->assertInteractionResponseSentContainingMessage('You can start your deployment on `first-repository` now!')
 
             ->joinDeploymentQueue($firstQueue, $secondRepository, $secondBlocker = 'second-blocker', $link)
-            ->assertDeploymentExists($firstQueue, $secondRepository, $secondBlocker, $link, DeploymentStatus::ACTIVE)
+            ->assertDeploymentExists($firstQueue, $secondRepository, $secondBlocker, $link, active: true)
             ->assertInteractionResponseSentContainingMessage('You can start your deployment on `second-repository` now!')
 
             ->joinDeploymentQueue($secondQueue, $firstRepository, $firstBlocked = 'first-blocked', $link)
-            ->assertDeploymentExists($secondQueue, $firstRepository, $firstBlocked, $link, DeploymentStatus::PENDING)
+            ->assertDeploymentExists($secondQueue, $firstRepository, $firstBlocked, $link, pending: true)
             ->assertInteractionResponseSentContainingMessage('You are now 1st in the `second-queue` queue. You will have to wait for <@test>')
 
             ->joinDeploymentQueue($secondQueue, $secondRepository, $secondBlocked = 'second-blocked', $link)
-            ->assertDeploymentExists($secondQueue, $secondRepository, $secondBlocked, $link, DeploymentStatus::PENDING)
+            ->assertDeploymentExists($secondQueue, $secondRepository, $secondBlocked, $link, pending: true)
             ->assertInteractionResponseSentContainingMessage('You are now 1st and 2nd in the `second-queue` queue. You will have to wait for <@test>')
 
             ->sendUserCommand(SubCommand::LEAVE, [$firstQueue])
@@ -55,12 +54,12 @@ class AllowJumpForExistingEntryIfUnblockedTest extends FeatureTestCase
             ->assertInteractionResponseSentContainingMessage('You are now 1st in the `first-queue` queue.')
 
             ->assertPrivateMessageSentContainingMessage('You can start deploying `second-blocked` to `second-repository` now!')
-            ->assertDeploymentExists($secondQueue, $secondRepository, $secondBlocked, $link, DeploymentStatus::ACTIVE)
+            ->assertDeploymentExists($secondQueue, $secondRepository, $secondBlocked, $link, active: true)
 
             ->sendUserCommand(SubCommand::LEAVE, [$firstQueue])
             ->assertInteractionResponseSentContainingMessage('You have left the `first-queue` queue.')
 
-            ->assertDeploymentExists($secondQueue, $firstRepository, $firstBlocked, $link, DeploymentStatus::PENDING)
+            ->assertDeploymentExists($secondQueue, $firstRepository, $firstBlocked, $link, pending: true)
 
             ->sendUserCommand(SubCommand::LEAVE, [$secondQueue])
             ->assertModalOpened(Modal::LEAVE_QUEUE)
@@ -75,7 +74,7 @@ class AllowJumpForExistingEntryIfUnblockedTest extends FeatureTestCase
             )
             ->assertInteractionResponseSentContainingMessage('You have been removed from the `second-queue` queue.')
 
-            ->assertDeploymentExists($secondQueue, $firstRepository, $firstBlocked, $link, DeploymentStatus::ACTIVE)
+            ->assertDeploymentExists($secondQueue, $firstRepository, $firstBlocked, $link, active: true)
             ->assertPrivateMessageSentContainingMessage('You can start deploying `first-blocked` to `first-repository` now!')
         ;
     }

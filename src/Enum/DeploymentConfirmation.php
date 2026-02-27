@@ -7,6 +7,6 @@ namespace App\Enum;
 enum DeploymentConfirmation: string
 {
     case JOIN = 'join';
-    case DEPLOYMENT = 'deployment';
+    case START = 'start';
     case COMPLETION = 'completion';
 }

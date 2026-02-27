@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Configuration;
 
-use App\Enum\DeploymentStatus;
 use App\Enum\NotificationMode;
 use App\Enum\NotificationSetting;
 use App\Enum\QueueBehaviour;
@@ -24,7 +23,7 @@ class EditNotificationModeTest extends FeatureTestCase
         $this->createRepository($repository = 'repository')
             ->createDeploymentQueue($queue = 'queue', [$repository], QueueBehaviour::ENFORCE_QUEUE)
             ->joinDeploymentQueue($queue, $repository, $description = 'firstDescription', $link = 'https://link.com')
-            ->assertDeploymentExists($queue, $repository, $description, $link, DeploymentStatus::ACTIVE)
+            ->assertDeploymentExists($queue, $repository, $description, $link, active: true)
             ->assertInteractionResponseSentContainingMessage('You can start your deployment on `repository` now!')
 
             // Switch notifications to ephemeral only
@@ -62,7 +61,7 @@ class EditNotificationModeTest extends FeatureTestCase
 
             // Join the queue again
             ->joinDeploymentQueue($queue, $repository, $description, $link)
-            ->assertDeploymentExists($queue, $repository, $description, $link, DeploymentStatus::ACTIVE)
+            ->assertDeploymentExists($queue, $repository, $description, $link, active: true)
             ->assertInteractionResponseSentContainingMessage('You can start your deployment on `repository` now!')
 
             // On pop, the user should receive a persistent message

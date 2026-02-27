@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Queue\Deployment\Simultaneous;
 
-use App\Enum\DeploymentStatus;
 use App\Enum\QueueBehaviour;
 use App\Slack\BlockElement\BlockElement;
 use App\Slack\Command\SubCommand;
@@ -55,13 +54,13 @@ class UnrelatedDeploymentTest extends FeatureTestCase
                 QueueBehaviour::ALLOW_SIMULTANEOUS,
             )
             ->joinDeploymentQueue($firstQueue, $firstBlockerRepository, $description = 'firstDescription', $link = 'https://example.com')
-            ->assertDeploymentExists($firstQueue, $firstBlockerRepository, $description, $link, DeploymentStatus::ACTIVE)
+            ->assertDeploymentExists($firstQueue, $firstBlockerRepository, $description, $link, active: true)
 
             ->joinDeploymentQueue($blockedQueue, $blockedRepository, $blockedDescription = 'blockedDescription', $link)
-            ->assertDeploymentExists($blockedQueue, $blockedRepository, $blockedDescription, $link, DeploymentStatus::PENDING)
+            ->assertDeploymentExists($blockedQueue, $blockedRepository, $blockedDescription, $link, pending: true)
 
             ->joinDeploymentQueue($firstQueue, $secondBlockerRepository, $description = 'secondDescription', $link)
-            ->assertDeploymentExists($firstQueue, $secondBlockerRepository, $description, $link, DeploymentStatus::ACTIVE)
-            ->assertDeploymentExists($blockedQueue, $blockedRepository, $blockedDescription, $link, DeploymentStatus::PENDING);
+            ->assertDeploymentExists($firstQueue, $secondBlockerRepository, $description, $link, active: true)
+            ->assertDeploymentExists($blockedQueue, $blockedRepository, $blockedDescription, $link, pending: true);
     }
 }

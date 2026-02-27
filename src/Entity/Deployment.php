@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use App\Enum\DeploymentStatus;
 use App\Enum\QueueBehaviour;
 use Carbon\CarbonImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -13,8 +12,6 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping\HasLifecycleCallbacks;
-use Doctrine\ORM\Mapping\JoinTable;
-use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\OneToMany;
 use Nelmio\ApiDocBundle\Attribute\Model;
@@ -39,23 +36,19 @@ class Deployment extends QueuedUser
     #[Groups(['queue', 'repository', 'queued-user'])]
     private ?string $description = null;
 
-    /** @var Collection<int, User> $notifyUsers */
+    /** @var Collection<int, DeploymentUser> $users */
     #[OneToMany(targetEntity: DeploymentUser::class, mappedBy: 'deployment', cascade: ['persist'])]
     #[Groups(['queued-user'])]
     private Collection $users;
 
-    #[Column(type: Types::ENUM, nullable: false, enumType: DeploymentStatus::class)]
-    #[Groups(['queue', 'repository', 'queued-user'])]
-    private DeploymentStatus $status = DeploymentStatus::PENDING;
+    #[Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?CarbonImmutable $joinedAt = null;
 
     #[Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?CarbonImmutable $startedAt = null;
 
     #[Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?CarbonImmutable $completedAt = null;
-
-    #[Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?CarbonImmutable $confirmedAt = null;
 
     public function __construct()
     {
@@ -106,17 +99,19 @@ class Deployment extends QueuedUser
 
     public function addUser(DeploymentUser $user): static
     {
-        if (!$this->notifyUsers->contains($user)) {
-            $this->notifyUsers->add($user);
+        if (!$this->users->contains($user)) {
+            $this->users->add($user);
+            $user->setDeployment($this);
         }
 
         return $this;
     }
 
-    public function removeNotifyUser(User $user): static
+    public function removeUser(DeploymentUser $user): static
     {
-        if ($this->notifyUsers->contains($user)) {
-            $this->notifyUsers->removeElement($user);
+        if ($this->users->contains($user)) {
+            $this->users->removeElement($user);
+            $user->setDeployment(null);
         }
 
         return $this;
@@ -127,26 +122,24 @@ class Deployment extends QueuedUser
         return $this->repository?->isBlockedByDeployment() ?? false;
     }
 
-    public function getStatus(): DeploymentStatus
+    public function isDraft(): bool
     {
-        return $this->status;
+        return $this->joinedAt === null;
     }
 
-    public function setStatus(DeploymentStatus $status): static
+    public function isPending(): bool
     {
-        $this->status = $status;
-
-        return $this;
+        return $this->joinedAt !== null && $this->startedAt === null;
     }
 
     public function isActive(): bool
     {
-        return DeploymentStatus::ACTIVE === $this->status;
+        return $this->startedAt !== null && $this->completedAt === null;
     }
 
-    public function isAwaitingDeployment(): bool
+    public function isCompleted(): bool
     {
-        return DeploymentStatus::AWAITING_DEPLOYMENT === $this->status;
+        return $this->completedAt !== null;
     }
 
     public function isBlockedByQueue(): bool

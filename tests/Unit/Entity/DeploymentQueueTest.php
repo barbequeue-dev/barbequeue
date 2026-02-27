@@ -7,7 +7,6 @@ namespace App\Tests\Unit\Entity;
 use App\Entity\Deployment;
 use App\Entity\DeploymentQueue;
 use App\Entity\Repository;
-use App\Enum\DeploymentStatus;
 use App\Enum\Queue;
 use App\Enum\QueueBehaviour;
 use Carbon\CarbonImmutable;
@@ -303,13 +302,13 @@ class DeploymentQueueTest extends KernelTestCase
     {
         $firstDeployment = $this->createMock(Deployment::class);
         $firstDeployment->expects($this->once())
-            ->method('getStatus')
-            ->willReturn(DeploymentStatus::PENDING);
+            ->method('isPending')
+            ->willReturn(true);
 
         $secondDeployment = $this->createMock(Deployment::class);
         $secondDeployment->expects($this->once())
-            ->method('getStatus')
-            ->willReturn(DeploymentStatus::ACTIVE);
+            ->method('isPending')
+            ->willReturn(false);
 
         $queue = new DeploymentQueue();
         $queue->addQueuedUser($firstDeployment)->addQueuedUser($secondDeployment);

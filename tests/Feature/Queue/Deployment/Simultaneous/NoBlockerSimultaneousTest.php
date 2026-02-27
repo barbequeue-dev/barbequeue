@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Queue\Deployment\Simultaneous;
 
-use App\Enum\DeploymentStatus;
 use App\Enum\Queue;
 use App\Enum\QueueBehaviour;
 use App\Slack\BlockElement\BlockElement;
@@ -53,22 +52,22 @@ class NoBlockerSimultaneousTest extends FeatureTestCase
 
             // Join the new queue with the first repository - should be active
             ->joinDeploymentQueue($queueName, $firstRepository, $description = 'description', $link = 'https://example.com')
-            ->assertDeploymentExists($queueName, $firstRepository, $description, $link, DeploymentStatus::ACTIVE)
+            ->assertDeploymentExists($queueName, $firstRepository, $description, $link, active: true)
             ->assertInteractionResponseSentContainingMessage('You can start your deployment on `repository-1` now!')
 
             // Join the queue with the first repository as a different user - should be blocked
             ->joinDeploymentQueue($queueName, $firstRepository, $description = 'secondDescription', $link = 'https://example2.com', $secondUser = 'test2')
-            ->assertDeploymentExists($queueName, $firstRepository, $description, $link, DeploymentStatus::PENDING, $secondUser)
+            ->assertDeploymentExists($queueName, $firstRepository, $description, $link, pending: true, userId: $secondUser)
             ->assertInteractionResponseSentContainingMessage('You are now 2nd in the `test` queue. You will have to wait for <@test>')
 
             // Join the queue with the second repository as the second user - should be active
             ->joinDeploymentQueue($queueName, $secondRepository, $description = 'thirdDescription', $link = 'https://example3.com', $secondUser)
-            ->assertDeploymentExists($queueName, $secondRepository, $description, $link, DeploymentStatus::ACTIVE, $secondUser)
+            ->assertDeploymentExists($queueName, $secondRepository, $description, $link, active: true, userId: $secondUser)
             ->assertInteractionResponseSentContainingMessage('You can start your deployment on `repository-2` now!')
 
             // Join the queue with the second repository as the first user - should be blocked
             ->joinDeploymentQueue($queueName, $secondRepository, $description = 'fourthDescription', $link = 'https://example4.com')
-            ->assertDeploymentExists($queueName, $secondRepository, $description, $link, DeploymentStatus::PENDING)
+            ->assertDeploymentExists($queueName, $secondRepository, $description, $link, pending: true)
             ->assertInteractionResponseSentContainingMessage('You are now 1st and 4th in the `test` queue. You will have to wait for <@test2>')
 
             // Finish the third deployment added to the queue (that was blocking the fourth one)
@@ -90,7 +89,7 @@ class NoBlockerSimultaneousTest extends FeatureTestCase
             ->assertPrivateMessageSentContainingMessage('You can start deploying `fourthDescription` to `repository-2` now!')
             ->assertQueuedUserPositionsInQueueCorrect($queueName, [3], $secondUser)
             ->assertQueuedUserPositionsInQueueCorrect($queueName, [1, 2])
-            ->assertDeploymentExists($queueName, $secondRepository, $description, $link, DeploymentStatus::ACTIVE)
+            ->assertDeploymentExists($queueName, $secondRepository, $description, $link, active: true)
 
             // Create a new repository
             ->createRepository($thirdRepository = 'repository-3')
@@ -118,7 +117,7 @@ class NoBlockerSimultaneousTest extends FeatureTestCase
 
             // Join the queue again with the third repository, should allow immediate deployment
             ->joinDeploymentQueue($queueName, $thirdRepository, $description = 'shouldDeployImmediately', $link = 'https://example.com')
-            ->assertDeploymentExists($queueName, $thirdRepository, $description, $link, DeploymentStatus::ACTIVE)
+            ->assertDeploymentExists($queueName, $thirdRepository, $description, $link, active: true)
             ->assertInteractionResponseSentContainingMessage('You can start your deployment on `repository-3` now!')
         ;
     }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use App\Enum\DeploymentStatus;
 use App\Enum\QueueBehaviour;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -13,6 +12,7 @@ use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping\JoinTable;
 use Doctrine\ORM\Mapping\ManyToMany;
+use Doctrine\ORM\Mapping\OneToOne;
 use Doctrine\ORM\Mapping\UniqueConstraint;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -45,8 +45,8 @@ class DeploymentQueue extends Queue
      */
     private Collection $queuedUsers;
 
-    #[Column(type: Types::INTEGER, nullable: true)]
-    private ?int $confirmationTimeoutMinutes = null;
+    #[OneToOne(targetEntity: DeploymentQueueSettings::class, mappedBy: 'deploymentQueue')]
+    private ?DeploymentQueueSettings $settings = null;
 
     public function __construct()
     {
@@ -172,6 +172,7 @@ class DeploymentQueue extends Queue
         return true;
     }
 
+    // TODO: Use new sort algorithm to sort by new statuses
     public function getSortedUsers(): array
     {
         $deployments = [];
@@ -213,24 +214,12 @@ class DeploymentQueue extends Queue
         $deployments = $this->getSortedUsers();
 
         return array_filter($deployments, function (Deployment $deployment) {
-            return DeploymentStatus::PENDING === $deployment->getStatus();
+            return $deployment->isPending();
         });
     }
 
-    public function shouldConfirmDeployments(): bool
+    public function getSettings(): ?DeploymentQueueSettings
     {
-        return null !== $this->confirmationTimeoutMinutes;
-    }
-
-    public function getConfirmationTimeoutMinutes(): ?int
-    {
-        return $this->confirmationTimeoutMinutes;
-    }
-
-    public function setConfirmationTimeoutMinutes(?int $confirmationTimeoutMinutes): static
-    {
-        $this->confirmationTimeoutMinutes = $confirmationTimeoutMinutes;
-
-        return $this;
+        return $this->settings;
     }
 }
