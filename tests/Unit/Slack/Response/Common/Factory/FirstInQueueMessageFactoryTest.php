@@ -23,7 +23,7 @@ class FirstInQueueMessageFactoryTest extends KernelTestCase
     #[Test]
     public function itShouldCreatePrivateMessageWithExpiry(): void
     {
-        $expiresAt = CarbonImmutable::now()->addMinutes(6);
+        $expiresAt = CarbonImmutable::now()->addMinutes(5);
 
         $user = $this->createStub(User::class);
         $queuedUser = $this->createMock(QueuedUser::class);
