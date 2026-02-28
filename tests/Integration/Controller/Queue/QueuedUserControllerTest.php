@@ -221,9 +221,6 @@ class QueuedUserControllerTest extends ApiTestCase
 
         $this->jsonGet('/api/queue/queueName/queued-user/'.$id);
         $this->assertOk();
-
-        $this->assertArrayHasKey('status', $response = $this->getJsonResponse());
-        $this->assertEquals('active', $response['status']);
     }
 
     #[Test]

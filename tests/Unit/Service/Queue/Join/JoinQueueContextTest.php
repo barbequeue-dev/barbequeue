@@ -44,13 +44,13 @@ class JoinQueueContextTest extends KernelTestCase
         $this->assertSame($deploymentDescription, $context->getDeploymentDescription());
         $this->assertSame($deploymentLink, $context->getDeploymentLink());
         $this->assertSame($deploymentRepositoryId, $context->getDeploymentRepositoryId());
-        $this->assertSame($notifyUsers, $context->getNotifyUsers());
+        $this->assertSame($notifyUsers, $context->getNotifyUserIds());
 
-        $this->assertEmpty($context->getUsers());
+        $this->assertEmpty($context->getNotifyUsers());
 
-        $context->addUser($user = $this->createStub(User::class));
+        $context->addNotifyUser($user = $this->createStub(User::class));
 
-        $this->assertSame($user, $context->getUsers()->first());
+        $this->assertSame($user, $context->getNotifyUsers()->first());
 
         $context->setQueuedUser($queuedUser = $this->createStub(QueuedUser::class));
         $this->assertSame($queuedUser, $context->getQueuedUser());

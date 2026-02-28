@@ -6,10 +6,10 @@ namespace App\Tests\Unit\EventSubscriber;
 
 use App\Calculator\ClosestFiveMinutesCalculator;
 use App\Entity\Deployment;
-use App\Entity\Queue;
+use App\Entity\DeploymentQueue;
+use App\Entity\DeploymentQueueSettings;
 use App\Entity\Repository;
 use App\Entity\Workspace;
-use App\Enum\DeploymentStatus;
 use App\Event\Deployment\DeploymentStartedEvent;
 use App\Event\Repository\RepositoryUpdatedEvent;
 use App\EventSubscriber\RepositoryEventSubscriber;
@@ -19,6 +19,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 #[CoversClass(RepositoryEventSubscriber::class)]
@@ -46,6 +47,7 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             $this->createStub(ClosestFiveMinutesCalculator::class),
             $this->createStub(EntityManagerInterface::class),
             $this->createStub(EventDispatcherInterface::class),
+            $this->createStub(LoggerInterface::class),
         );
 
         $subscriber->handleUpdated($event);
@@ -70,6 +72,7 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             $this->createStub(ClosestFiveMinutesCalculator::class),
             $this->createStub(EntityManagerInterface::class),
             $this->createStub(EventDispatcherInterface::class),
+            $this->createStub(LoggerInterface::class),
         );
 
         $subscriber->handleUpdated($event);
@@ -78,6 +81,8 @@ class RepositoryEventSubscriberTest extends KernelTestCase
     #[Test]
     public function itShouldSetExpiresAtIfExpiryMinutesSetOnDeployment(): void
     {
+        CarbonImmutable::setTestNow(CarbonImmutable::now());
+
         $event = $this->createMock(RepositoryUpdatedEvent::class);
         $event->expects($this->once())
             ->method('getRepository')
@@ -91,10 +96,6 @@ class RepositoryEventSubscriberTest extends KernelTestCase
         $deployment->expects($this->once())
             ->method('getExpiryMinutes')
             ->willReturn(5);
-
-        $deployment->expects($this->once())
-            ->method('isActive')
-            ->willReturn(false);
 
         $resolver = $this->createMock(NextDeploymentResolver::class);
         $resolver->expects($this->once())
@@ -113,17 +114,28 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             ->willReturnSelf();
 
         $deployment->expects($this->once())
-            ->method('setStatus')
-            ->with(DeploymentStatus::ACTIVE)
-            ->willReturnSelf();
-
-        $deployment->expects($this->once())
             ->method('getQueue')
-            ->willReturn($queue = $this->createMock(Queue::class));
+            ->willReturn($queue = $this->createMock(DeploymentQueue::class));
 
         $queue->expects($this->once())
             ->method('getWorkspace')
             ->willReturn($workspace = $this->createStub(Workspace::class));
+
+        $queue->expects($this->once())
+            ->method('getSettings')
+            ->willReturn($settings = $this->createStub(DeploymentQueueSettings::class));
+
+        $settings->method('getStartConfirmationTimeoutMinutes')
+            ->willReturn(null);
+
+        $deployment->expects($this->once())
+            ->method('setStartedAt')
+            ->with(CarbonImmutable::now())
+            ->willReturnSelf();
+
+        $deployment->expects($this->once())
+            ->method('isActive')
+            ->willReturn(true);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects($this->once())
@@ -144,6 +156,7 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             $calculator,
             $entityManager,
             $eventDispatcher,
+            $this->createStub(LoggerInterface::class),
         );
 
         $subscriber->handleUpdated($event);
@@ -152,6 +165,8 @@ class RepositoryEventSubscriberTest extends KernelTestCase
     #[Test]
     public function itShouldNotSetExpiresAtIfExpiryMinutesNotSetOnDeployment(): void
     {
+        CarbonImmutable::setTestNow(CarbonImmutable::now());
+
         $event = $this->createMock(RepositoryUpdatedEvent::class);
         $event->expects($this->once())
             ->method('getRepository')
@@ -161,6 +176,21 @@ class RepositoryEventSubscriberTest extends KernelTestCase
         $deployment->expects($this->once())
             ->method('getExpiryMinutes')
             ->willReturn(null);
+
+        $deployment->expects($this->once())
+            ->method('getQueue')
+            ->willReturn($queue = $this->createStub(DeploymentQueue::class));
+
+        $queue->method('getSettings')
+            ->willReturn($settings = $this->createStub(DeploymentQueueSettings::class));
+
+        $settings->method('getStartConfirmationTimeoutMinutes')
+            ->wilLReturn(null);
+
+        $deployment->expects($this->once())
+            ->method('setStartedAt')
+            ->with(CarbonImmutable::now())
+            ->willReturnSelf();
 
         $resolver = $this->createMock(NextDeploymentResolver::class);
         $resolver->expects($this->once())
@@ -178,15 +208,6 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             ->with($expiresAt)
             ->willReturnSelf();
 
-        $deployment->expects($this->once())
-            ->method('setStatus')
-            ->with(DeploymentStatus::ACTIVE)
-            ->willReturnSelf();
-
-        $deployment->expects($this->once())
-            ->method('isActive')
-            ->willReturn(true);
-
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects($this->once())
             ->method('persist')
@@ -197,6 +218,7 @@ class RepositoryEventSubscriberTest extends KernelTestCase
             $calculator,
             $entityManager,
             $this->createStub(EventDispatcherInterface::class),
+            $this->createStub(LoggerInterface::class),
         );
 
         $subscriber->handleUpdated($event);

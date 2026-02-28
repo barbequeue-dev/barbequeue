@@ -11,7 +11,6 @@ use App\Entity\QueuedUser;
 use App\Entity\Repository;
 use App\Entity\User;
 use App\Entity\Workspace;
-use App\Enum\DeploymentStatus;
 use App\Enum\Queue;
 use App\Enum\QueueBehaviour;
 use App\Message\Queue\PopQueuesMessage;
@@ -640,7 +639,10 @@ class FeatureTestCase extends WebTestCase
         string $repositoryName,
         string $description,
         string $link,
-        DeploymentStatus $deploymentStatus,
+        bool $draft = false,
+        bool $pending = false,
+        bool $active = false,
+        bool $completed = false,
         string $userId = 'test',
         ?int $expiryMinutes = null,
         bool $hasExpiry = false,
@@ -649,7 +651,7 @@ class FeatureTestCase extends WebTestCase
 
         $this->assertNotNull($queue);
 
-        $deployment = $queue->getQueuedUsers()->findFirst(function (int $key, QueuedUser $queuedUser) use ($repositoryName, $description, $link, $deploymentStatus, $userId) {
+        $deployment = $queue->getQueuedUsers()->findFirst(function (int $key, QueuedUser $queuedUser) use ($repositoryName, $description, $link, $draft, $pending, $active, $completed, $userId) {
             $this->assertInstanceOf(Deployment::class, $queuedUser);
 
             if ($repositoryName !== $queuedUser->getRepository()?->getName()) {
@@ -664,7 +666,19 @@ class FeatureTestCase extends WebTestCase
                 return false;
             }
 
-            if ($deploymentStatus !== $queuedUser->getStatus()) {
+            if ($draft !== $queuedUser->isDraft()) {
+                return false;
+            }
+
+            if ($pending !== $queuedUser->isPending()) {
+                return false;
+            }
+
+            if ($active !== $queuedUser->isActive()) {
+                return false;
+            }
+
+            if ($completed !== $queuedUser->isCompleted()) {
                 return false;
             }
 

@@ -121,7 +121,7 @@ class JoinDeploymentQueueInteractionHandlerTest extends AbstractInteractionHandl
                 $this->assertSame($deploymentDescription, $context->getDeploymentDescription());
                 $this->assertSame($deploymentLink, $context->getDeploymentLink());
                 $this->assertSame($repositoryId, $context->getDeploymentRepositoryId());
-                $this->assertSame($notifyUsers, $context->getNotifyUsers());
+                $this->assertSame($notifyUsers, $context->getNotifyUserIds());
 
                 $exception = $this->createMock(QueueNotFoundException::class);
                 $exception->expects($this->once())
@@ -236,7 +236,7 @@ class JoinDeploymentQueueInteractionHandlerTest extends AbstractInteractionHandl
                 $this->assertSame($deploymentDescription, $context->getDeploymentDescription());
                 $this->assertSame($deploymentLink, $context->getDeploymentLink());
                 $this->assertSame($repositoryId, $context->getDeploymentRepositoryId());
-                $this->assertSame($notifyUsers, $context->getNotifyUsers());
+                $this->assertSame($notifyUsers, $context->getNotifyUserIds());
 
                 throw $this->createStub(DeploymentInformationRequiredException::class);
             });
@@ -344,7 +344,7 @@ class JoinDeploymentQueueInteractionHandlerTest extends AbstractInteractionHandl
                 $this->assertSame($deploymentDescription, $context->getDeploymentDescription());
                 $this->assertSame($deploymentLink, $context->getDeploymentLink());
                 $this->assertSame($repositoryId, $context->getDeploymentRepositoryId());
-                $this->assertSame($notifyUsers, $context->getNotifyUsers());
+                $this->assertSame($notifyUsers, $context->getNotifyUserIds());
 
                 $exception = $this->createMock(UnableToJoinQueueException::class);
                 $exception->expects($this->once())
@@ -456,7 +456,7 @@ class JoinDeploymentQueueInteractionHandlerTest extends AbstractInteractionHandl
                 $this->assertSame($deploymentDescription, $context->getDeploymentDescription());
                 $this->assertSame($deploymentLink, $context->getDeploymentLink());
                 $this->assertSame($repositoryId, $context->getDeploymentRepositoryId());
-                $this->assertSame($notifyUsers, $context->getNotifyUsers());
+                $this->assertSame($notifyUsers, $context->getNotifyUserIds());
 
                 $exception = $this->createMock(InvalidDeploymentUrlException::class);
                 $exception->expects($this->once())
@@ -577,7 +577,7 @@ class JoinDeploymentQueueInteractionHandlerTest extends AbstractInteractionHandl
                 $this->assertSame($deploymentDescription, $context->getDeploymentDescription());
                 $this->assertSame($deploymentLink, $context->getDeploymentLink());
                 $this->assertSame($repositoryId, $context->getDeploymentRepositoryId());
-                $this->assertSame($notifyUsers, $context->getNotifyUsers());
+                $this->assertSame($notifyUsers, $context->getNotifyUserIds());
 
                 $context->setQueuedUser($queuedUser);
             });

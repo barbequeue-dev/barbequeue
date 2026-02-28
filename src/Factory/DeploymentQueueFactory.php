@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Factory;
 
 use App\Entity\DeploymentQueue;
+use App\Entity\DeploymentQueueSettings;
 use App\Entity\Workspace;
 use App\Enum\QueueBehaviour;
 use App\Repository\RepositoryRepositoryInterface;
@@ -30,7 +31,8 @@ readonly class DeploymentQueueFactory
             ->setWorkspace($workspace)
             ->setMaximumEntriesPerUser($maximumEntriesPerUser)
             ->setExpiryMinutes($expiryMinutes)
-            ->setBehaviour(QueueBehaviour::tryFrom($behaviour) ?? QueueBehaviour::ENFORCE_QUEUE);
+            ->setBehaviour(QueueBehaviour::tryFrom($behaviour) ?? QueueBehaviour::ENFORCE_QUEUE)
+            ->setSettings(new DeploymentQueueSettings());
 
         if (null === $workspace) {
             return $queue;

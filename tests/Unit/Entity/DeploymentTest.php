@@ -6,10 +6,11 @@ namespace App\Tests\Unit\Entity;
 
 use App\Entity\Deployment;
 use App\Entity\DeploymentQueue;
+use App\Entity\DeploymentUser;
 use App\Entity\Repository;
 use App\Entity\User;
-use App\Enum\DeploymentStatus;
 use App\Enum\QueueBehaviour;
+use Carbon\CarbonImmutable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -23,27 +24,51 @@ class DeploymentTest extends KernelTestCase
         $deployment = new Deployment()
             ->setRepository($repository = $this->createStub(Repository::class))
             ->setLink($link = 'link')
-            ->setDescription($description = 'description')
-            ->setStatus($status = DeploymentStatus::ACTIVE);
+            ->setDescription($description = 'description');
 
         $this->assertSame($repository, $deployment->getRepository());
         $this->assertSame($link, $deployment->getLink());
         $this->assertSame($description, $deployment->getDescription());
-        $this->assertSame($status, $deployment->getStatus());
 
-        $notifyUser = $this->createStub(User::class);
+        $notifyUser = $this->createStub(DeploymentUser::class);
+        $notifyUser->method('getUser')
+            ->willReturn($user = $this->createStub(User::class));
 
-        $deployment->addNotifyUser($notifyUser);
+        $deployment->addUser($notifyUser);
 
         $this->assertCount(1, $deployment->getNotifyUsers());
-        $this->assertEquals($notifyUser, $deployment->getNotifyUsers()->first());
+        $this->assertEquals($user, $deployment->getNotifyUsers()->first());
 
-        $deployment->removeNotifyUser($notifyUser);
+        $deployment->removeUser($notifyUser);
 
         $this->assertCount(0, $deployment->getNotifyUsers());
         $this->assertFalse($deployment->getNotifyUsers()->first());
 
+        $this->assertTrue($deployment->isDraft());
+        $this->assertFalse($deployment->isPending());
+        $this->assertFalse($deployment->isActive());
+        $this->assertFalse($deployment->isCompleted());
+
+        $deployment->setJoinedAt(CarbonImmutable::now());
+
+        $this->assertFalse($deployment->isDraft());
+        $this->assertTrue($deployment->isPending());
+        $this->assertFalse($deployment->isActive());
+        $this->assertFalse($deployment->isCompleted());
+
+        $deployment->setStartedAt(CarbonImmutable::now());
+
+        $this->assertFalse($deployment->isDraft());
+        $this->assertFalse($deployment->isPending());
         $this->assertTrue($deployment->isActive());
+        $this->assertFalse($deployment->isCompleted());
+
+        $deployment->setCompletedAt(CarbonImmutable::now());
+
+        $this->assertFalse($deployment->isDraft());
+        $this->assertFalse($deployment->isPending());
+        $this->assertFalse($deployment->isActive());
+        $this->assertTrue($deployment->isCompleted());
     }
 
     #[Test]
@@ -236,7 +261,7 @@ class DeploymentTest extends KernelTestCase
     public function itShouldReturnNullOnGetBlockedIfDeploymentIsActive(): void
     {
         $deployment = new Deployment()
-            ->setStatus(DeploymentStatus::ACTIVE);
+            ->setStartedAt($this->createStub(CarbonImmutable::class));
 
         $this->assertNull($deployment->getBlocker());
     }

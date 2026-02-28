@@ -23,9 +23,9 @@ readonly class ResolveNotifyUsersHandler implements JoinQueueHandlerInterface
     public function supports(QueueContextInterface $context): bool
     {
         return $context instanceof JoinQueueContext
-            && !empty($context->getNotifyUsers())
+            && !empty($context->getNotifyUserIds())
             && $context->getQueue() instanceof DeploymentQueue
-            && $context->getUsers()->isEmpty();
+            && $context->getNotifyUsers()->isEmpty();
     }
 
     public function handle(QueueContextInterface $context): void
@@ -42,8 +42,8 @@ readonly class ResolveNotifyUsersHandler implements JoinQueueHandlerInterface
 
         $workspace = $context->getWorkspace();
 
-        foreach ($context->getNotifyUsers() as $userId) {
-            $context->addUser(
+        foreach ($context->getNotifyUserIds() as $userId) {
+            $context->addNotifyUser(
                 $this->userResolver->resolve($userId, $workspace),
             );
         }

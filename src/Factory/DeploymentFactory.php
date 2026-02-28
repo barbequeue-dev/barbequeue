@@ -6,6 +6,7 @@ namespace App\Factory;
 
 use App\Entity\Deployment;
 use App\Entity\DeploymentQueue;
+use Carbon\CarbonImmutable;
 
 class DeploymentFactory
 {
@@ -14,6 +15,10 @@ class DeploymentFactory
         $deployment = new Deployment()->setCreatedAtNow();
 
         $deploymentQueue->addQueuedUser($deployment);
+
+        if (null === $deploymentQueue->getSettings()?->getJoinConfirmationTimeoutMinutes()) {
+            $deployment->setJoinedAt(CarbonImmutable::now());
+        }
 
         return $deployment;
     }

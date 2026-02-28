@@ -20,7 +20,7 @@ class JoinQueueContext extends QueueContext implements QueueContextInterface
     private ?Repository $repository = null;
 
     /** @var Collection<int, User> */
-    private Collection $users;
+    private Collection $notifyUsers;
 
     public function __construct(
         string $queueName,
@@ -31,12 +31,12 @@ class JoinQueueContext extends QueueContext implements QueueContextInterface
         private readonly ?string $deploymentDescription = null,
         private ?string $deploymentLink = null,
         private readonly ?int $deploymentRepositoryId = null,
-        /** @var string[] $notifyUsers */
-        private readonly array $notifyUsers = [],
+        /** @var string[] $notifyUserIds */
+        private readonly array $notifyUserIds = [],
     ) {
         parent::__construct($queueName, $teamId, $userId);
 
-        $this->users = new ArrayCollection();
+        $this->notifyUsers = new ArrayCollection();
     }
 
     public function getType(): ContextType
@@ -70,9 +70,9 @@ class JoinQueueContext extends QueueContext implements QueueContextInterface
     }
 
     /** @return string[] */
-    public function getNotifyUsers(): array
+    public function getNotifyUserIds(): array
     {
-        return $this->notifyUsers;
+        return $this->notifyUserIds;
     }
 
     public function getQueuedUser(): QueuedUser
@@ -96,15 +96,15 @@ class JoinQueueContext extends QueueContext implements QueueContextInterface
     }
 
     /** @return Collection<int, User> */
-    public function getUsers(): Collection
+    public function getNotifyUsers(): Collection
     {
-        return $this->users;
+        return $this->notifyUsers;
     }
 
-    public function addUser(User $user): void
+    public function addNotifyUser(User $user): void
     {
-        if (!$this->users->contains($user)) {
-            $this->users->add($user);
+        if (!$this->notifyUsers->contains($user)) {
+            $this->notifyUsers->add($user);
         }
     }
 
