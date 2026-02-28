@@ -101,7 +101,7 @@ class DispatchDeploymentEventHandlerTest extends LoggerAwareTestCase
         $context = $this->createMock(JoinQueueContext::class);
         $context->expects($this->once())
             ->method('getQueuedUser')
-            ->willReturn($deployment = $this->createMock(Deployment::class));
+            ->willReturn($deployment = $this->createStub(Deployment::class));
 
         $deployment->method('isDraft')
             ->willReturn(false);
