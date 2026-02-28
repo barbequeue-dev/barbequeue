@@ -172,50 +172,69 @@ class DeploymentQueue extends Queue
         return true;
     }
 
-    // TODO: Use new sort algorithm to sort by new statuses
-    public function getSortedUsers(): array
-    {
-        $deployments = [];
-
-        $users = parent::getSortedUsers();
-
-        /** @var Deployment $deployment */
-        foreach ($users as $deployment) {
-            if ($deployment->isActive()) {
-                $deployments[] = $deployment;
-            }
-        }
-
-        /** @var Deployment $deployment */
-        foreach ($users as $deployment) {
-            if (!in_array($deployment, $deployments, true)) {
-                $deployments[] = $deployment;
-            }
-        }
-
-        return $deployments;
-    }
-
     /** @return Deployment[] */
     public function getActiveDeployments(): array
     {
         /** @var Deployment[] $deployments */
-        $deployments = $this->getSortedUsers();
+        $deployments = $this->getQueuedUsers()->toArray();
 
-        return array_filter($deployments, function (Deployment $deployment) {
-            return $deployment->isActive();
+        $deployments = array_filter($deployments, fn (Deployment $deployment) => $deployment->isActive());
+
+        uasort($deployments, function (Deployment $first, Deployment $second) {
+            return $first->getStartedAt() <=> $second->getStartedAt();
         });
+
+        return array_values($deployments);
     }
 
     /** @return Deployment[] */
     public function getPendingDeployments(): array
     {
         /** @var Deployment[] $deployments */
-        $deployments = $this->getSortedUsers();
+        $deployments = $this->getQueuedUsers()->toArray();
 
-        return array_filter($deployments, function (Deployment $deployment) {
-            return $deployment->isPending();
+        $deployments = array_filter($deployments, fn (Deployment $deployment) => $deployment->isPending());
+
+        uasort($deployments, function (Deployment $first, Deployment $second) {
+            return $first->getJoinedAt() <=> $second->getJoinedAt();
         });
+
+        return array_values($deployments);
+    }
+
+    /** @return Deployment[] */
+    public function getDraftDeployments(): array
+    {
+        /** @var Deployment[] $deployments */
+        $deployments = $this->getQueuedUsers()->toArray();
+
+        $deployments = array_filter($deployments, fn (Deployment $deployment) => $deployment->isDraft());
+
+        uasort($deployments, function (Deployment $first, Deployment $second) {
+            return $first->getCreatedAt() <=> $second->getCreatedAt();
+        });
+
+        return array_values($deployments);
+    }
+
+    /** @return Deployment[] */
+    public function getSortedUsers(): array
+    {
+        $deployments = [];
+
+        foreach ($this->getActiveDeployments() as $deployment) {
+            $deployments[] = $deployment;
+        }
+
+        foreach ($this->getPendingDeployments() as $deployment) {
+            $deployments[] = $deployment;
+        }
+
+        foreach ($this->getDraftDeployments() as $deployment) {
+            $deployments[] = $deployment;
+        }
+
+        return $deployments;
     }
 
     public function getSettings(): ?DeploymentQueueSettings

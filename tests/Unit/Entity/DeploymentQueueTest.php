@@ -110,6 +110,8 @@ class DeploymentQueueTest extends KernelTestCase
     public function itShouldReturnTrueIfFirstPlaceIsPassedDeployment(): void
     {
         $deployment = $this->createStub(Deployment::class);
+        $deployment->method('isPending')
+            ->willReturn(true);
 
         $queue = new DeploymentQueue()
             ->addQueuedUser($deployment);
@@ -158,9 +160,9 @@ class DeploymentQueueTest extends KernelTestCase
     public function itShouldReturnFalseIfPreviousInQueueIsNotBlockedByRepositoryForAllowJump(): void
     {
         $firstDeployment = $this->createMock(Deployment::class);
-        $firstDeployment->expects($this->exactly(3))
-            ->method('isActive')
-            ->willReturn(false);
+        $firstDeployment->expects($this->exactly(2))
+            ->method('isPending')
+            ->willReturn(true);
 
         $firstDeployment->expects($this->once())
             ->method('isBlockedByRepository')
@@ -171,6 +173,9 @@ class DeploymentQueueTest extends KernelTestCase
             ->addQueuedUser($deployment = $this->createStub(Deployment::class))
             ->setBehaviour(QueueBehaviour::ALLOW_JUMPS);
 
+        $deployment->method('isPending')
+            ->willReturn(true);
+
         $this->assertFalse($queue->isDeploymentAllowed($deployment));
     }
 
@@ -178,9 +183,9 @@ class DeploymentQueueTest extends KernelTestCase
     public function itShouldReturnTrueIfPreviousInQueueIsBlockedByRepositoryForAllowJump(): void
     {
         $firstDeployment = $this->createMock(Deployment::class);
-        $firstDeployment->expects($this->exactly(3))
-            ->method('isActive')
-            ->willReturn(false);
+        $firstDeployment->expects($this->exactly(2))
+            ->method('isPending')
+            ->willReturn(true);
 
         $firstDeployment->expects($this->once())
             ->method('isBlockedByRepository')
@@ -232,7 +237,7 @@ class DeploymentQueueTest extends KernelTestCase
             ->willReturn($this->createStub(Repository::class));
 
         $deployment = $this->createMock(Deployment::class);
-        $deployment->expects($this->exactly(5))
+        $deployment->expects($this->once())
             ->method('getRepository')
             ->willReturn($this->createStub(Repository::class));
 
@@ -249,18 +254,10 @@ class DeploymentQueueTest extends KernelTestCase
     {
         $firstDeployment = $this->createMock(Deployment::class);
         $firstDeployment->expects($this->once())
-            ->method('getCreatedAt')
-            ->willReturn(CarbonImmutable::now());
-
-        $firstDeployment->expects($this->once())
-            ->method('isActive')
-            ->willReturn(false);
+            ->method('isPending')
+            ->willReturn(true);
 
         $secondDeployment = $this->createMock(Deployment::class);
-        $secondDeployment->expects($this->once())
-            ->method('getCreatedAt')
-            ->willReturn(CarbonImmutable::now()->addMinutes(5));
-
         $secondDeployment->expects($this->once())
             ->method('isActive')
             ->willReturn(true);
@@ -278,13 +275,10 @@ class DeploymentQueueTest extends KernelTestCase
     #[Test]
     public function itShouldReturnActiveDeployments(): void
     {
-        $firstDeployment = $this->createMock(Deployment::class);
-        $firstDeployment->expects($this->exactly(2))
-            ->method('isActive')
-            ->willReturn(false);
+        $firstDeployment = $this->createStub(Deployment::class);
 
         $secondDeployment = $this->createMock(Deployment::class);
-        $secondDeployment->expects($this->exactly(2))
+        $secondDeployment->expects($this->once())
             ->method('isActive')
             ->willReturn(true);
 
