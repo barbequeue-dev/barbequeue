@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\DeploymentConfirmation as DeploymentConfirmationType;
 use App\Enum\QueueBehaviour;
 use Carbon\CarbonImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -275,5 +276,22 @@ class Deployment extends QueuedUser
         $this->completedAt = $completedAt;
 
         return $this;
+    }
+
+    /** @return Collection<int, DeploymentConfirmation> */
+    public function getConfirmationsByType(DeploymentConfirmationType $type): Collection
+    {
+        /** @var ArrayCollection<int, DeploymentConfirmation> $collection */
+        $collection = new ArrayCollection();
+
+        foreach ($this->users as $user) {
+            foreach ($user->getConfirmations() as $confirmation) {
+                if ($confirmation->getType() === $type) {
+                    $collection->add($confirmation);
+                }
+            }
+        }
+
+        return $collection;
     }
 }

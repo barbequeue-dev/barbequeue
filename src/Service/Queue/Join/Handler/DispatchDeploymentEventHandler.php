@@ -6,6 +6,7 @@ namespace App\Service\Queue\Join\Handler;
 
 use App\Entity\Deployment;
 use App\Event\Deployment\DeploymentAddedEvent;
+use App\Event\Deployment\DeploymentConfirmationRequiredEvent;
 use App\Event\Deployment\DeploymentStartedEvent;
 use App\Service\Queue\Context\QueueContextInterface;
 use App\Service\Queue\Join\JoinQueueContext;
@@ -39,9 +40,11 @@ readonly class DispatchDeploymentEventHandler implements JoinQueueHandlerInterfa
             return;
         }
 
-        $event = $deployment->isActive()
-            ? new DeploymentStartedEvent($deployment, $context->getWorkspace())
-            : new DeploymentAddedEvent($deployment, $context->getWorkspace());
+        $event = match (true) {
+            $deployment->isDraft() => new DeploymentConfirmationRequiredEvent($deployment, $context->getWorkspace()),
+            $deployment->isPending() => new DeploymentAddedEvent($deployment, $context->getWorkspace()),
+            default => new DeploymentStartedEvent($deployment, $context->getWorkspace()),
+        };
 
         $this->logger->debug('Dispatching {event} for new deployment on {queue} for {contextId} {contextType}', [
             'event' => $event::class,

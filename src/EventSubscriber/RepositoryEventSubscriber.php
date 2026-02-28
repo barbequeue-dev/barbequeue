@@ -7,7 +7,7 @@ namespace App\EventSubscriber;
 use App\Calculator\ClosestFiveMinutesCalculator;
 use App\Entity\DeploymentQueue;
 use App\Entity\DeploymentQueueSettings;
-use App\Event\Deployment\DeploymentAwaitingDeploymentEvent;
+use App\Event\Deployment\DeploymentConfirmationRequiredEvent;
 use App\Event\Deployment\DeploymentStartedEvent;
 use App\Event\Repository\RepositoryUpdatedEvent;
 use App\Resolver\Repository\NextDeploymentResolver;
@@ -78,8 +78,8 @@ readonly class RepositoryEventSubscriber implements EventSubscriberInterface
         }
 
         match (true) {
+            $nextDeployment->isPending() => $this->eventDispatcher->dispatch(new DeploymentConfirmationRequiredEvent($nextDeployment, $workspace, true)),
             $nextDeployment->isActive() => $this->eventDispatcher->dispatch(new DeploymentStartedEvent($nextDeployment, $workspace, true)),
-            $nextDeployment->isPending() => $this->eventDispatcher->dispatch(new DeploymentAwaitingDeploymentEvent($nextDeployment, $workspace, true)),
             default => $this->logger->warning('{deployment} is in invalid status', ['deployment' => $nextDeployment->getId()]),
         };
     }
